@@ -1,19 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Calendar, Briefcase, Users, Mountain, Compass, Plus, Menu, X, User, LogOut, Trash2 } from 'lucide-react';
-
-// LocalStorage wrapper (replaces window.storage)
-const storage = {
-  get: (key) => {
-    const value = localStorage.getItem(key);
-    return value ? { value } : null;
-  },
-  set: (key, value) => {
-    localStorage.setItem(key, value);
-  },
-  delete: (key) => {
-    localStorage.removeItem(key);
-  }
-};
+import { Search, Calendar, Briefcase, Users, Mountain, Compass, Plus, Menu, X, User, LogOut, Settings, Edit2, Trash2 } from 'lucide-react';
 
 export default function LinkXApp() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -21,18 +7,25 @@ export default function LinkXApp() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
+  // Data states
   const [listings, setListings] = useState([]);
   const [swaps, setSwaps] = useState([]);
   const [isoPosts, setIsoPosts] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
 
+  // Modal states
   const [showListingModal, setShowListingModal] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [showIsoModal, setShowIsoModal] = useState(false);
   const [showJobModal, setShowJobModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
 
+  // Form states
   const [listingForm, setListingForm] = useState({
     type: 'hunting',
     title: '',
@@ -43,8 +36,15 @@ export default function LinkXApp() {
     description: ''
   });
 
-  const [swapForm, setSwapForm] = useState({ offering: '', seeking: '' });
-  const [isoForm, setIsoForm] = useState({ description: '' });
+  const [swapForm, setSwapForm] = useState({
+    offering: '',
+    seeking: ''
+  });
+
+  const [isoForm, setIsoForm] = useState({
+    description: ''
+  });
+
   const [jobForm, setJobForm] = useState({
     title: '',
     company: '',
@@ -53,6 +53,22 @@ export default function LinkXApp() {
     description: ''
   });
 
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    date: '',
+    location: '',
+    description: ''
+  });
+
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    bio: '',
+    phone: '',
+    website: '',
+    location: ''
+  });
+
+  // Load data on mount
   useEffect(() => {
     loadAllData();
   }, []);
@@ -60,34 +76,61 @@ export default function LinkXApp() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const usersData = storage.get('users');
-      if (usersData) setUsers(JSON.parse(usersData.value));
+      // Load users
+      const usersData = await window.storage.get('users');
+      if (usersData) {
+        setUsers(JSON.parse(usersData.value));
+      }
 
-      const currentUserId = storage.get('currentUserId');
+      // Load current user
+      const currentUserId = await window.storage.get('currentUserId');
       if (currentUserId) {
-        const userData = storage.get(`user:${currentUserId.value}`);
+        const userData = await window.storage.get(`user:${currentUserId.value}`);
         if (userData) {
-          const user = JSON.parse(userData.value);
-          setCurrentUser(user);
+          setCurrentUser(JSON.parse(userData.value));
           setIsLoggedIn(true);
         }
       }
 
-      const listingsData = storage.get('listings');
-      if (listingsData) setListings(JSON.parse(listingsData.value));
+      // Load listings
+      const listingsData = await window.storage.get('listings');
+      if (listingsData) {
+        setListings(JSON.parse(listingsData.value));
+      }
 
-      const swapsData = storage.get('swaps');
-      if (swapsData) setSwaps(JSON.parse(swapsData.value));
+      // Load swaps
+      const swapsData = await window.storage.get('swaps');
+      if (swapsData) {
+        setSwaps(JSON.parse(swapsData.value));
+      }
 
-      const isoData = storage.get('isoPosts');
-      if (isoData) setIsoPosts(JSON.parse(isoData.value));
+      // Load ISO posts
+      const isoData = await window.storage.get('isoPosts');
+      if (isoData) {
+        setIsoPosts(JSON.parse(isoData.value));
+      }
 
-      const jobsData = storage.get('jobs');
-      if (jobsData) setJobs(JSON.parse(jobsData.value));
+      // Load jobs
+      const jobsData = await window.storage.get('jobs');
+      if (jobsData) {
+        setJobs(JSON.parse(jobsData.value));
+      }
+
+      // Load events
+      const eventsData = await window.storage.get('events');
+      if (eventsData) {
+        setEvents(JSON.parse(eventsData.value));
+      }
     } catch (error) {
       console.log('No existing data, starting fresh');
     }
     setLoading(false);
+  };
+
+  const sendWelcomeEmail = (userName, userEmail) => {
+    // Simulate sending email by showing alert
+    console.log(`Welcome email sent to ${userEmail}`);
+    alert(`Welcome to LinkX, ${userName}! A confirmation email has been sent to ${userEmail}.`);
   };
 
   const handleSignup = async (e) => {
@@ -101,18 +144,27 @@ export default function LinkXApp() {
       password: formData.get('password'),
       userType: formData.get('userType'),
       bio: '',
+      phone: '',
+      website: '',
+      location: '',
       createdAt: new Date().toISOString()
     };
 
-    storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
-    storage.set('currentUserId', newUser.id);
+    // Save user
+    await window.storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
+    await window.storage.set('currentUserId', newUser.id);
     
+    // Update users list
     const newUsers = [...users, { id: newUser.id, name: newUser.name, email: newUser.email }];
-    storage.set('users', JSON.stringify(newUsers));
+    await window.storage.set('users', JSON.stringify(newUsers));
     setUsers(newUsers);
 
     setCurrentUser(newUser);
     setIsLoggedIn(true);
+    
+    // Send welcome email
+    sendWelcomeEmail(newUser.name, newUser.email);
+    
     setCurrentPage('home');
   };
 
@@ -122,37 +174,62 @@ export default function LinkXApp() {
     const email = formData.get('email');
     const password = formData.get('password');
 
-    const usersList = storage.get('users');
+    // Find user by email
+    const usersList = await window.storage.get('users');
     if (usersList) {
       const usersArray = JSON.parse(usersList.value);
       const foundUser = usersArray.find(u => u.email === email);
       
       if (foundUser) {
-        const userData = storage.get(`user:${foundUser.id}`);
+        const userData = await window.storage.get(`user:${foundUser.id}`);
         if (userData) {
           const user = JSON.parse(userData.value);
           if (user.password === password) {
             setCurrentUser(user);
             setIsLoggedIn(true);
-            storage.set('currentUserId', user.id);
+            await window.storage.set('currentUserId', user.id);
             setCurrentPage('home');
             return;
           }
         }
       }
     }
+    
     alert('Invalid email or password');
   };
 
   const handleLogout = async () => {
-    storage.delete('currentUserId');
+    await window.storage.delete('currentUserId');
     setIsLoggedIn(false);
     setCurrentUser(null);
     setCurrentPage('home');
   };
 
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+
+    // Find user by email
+    const usersList = await window.storage.get('users');
+    if (usersList) {
+      const usersArray = JSON.parse(usersList.value);
+      const foundUser = usersArray.find(u => u.email === email);
+      
+      if (foundUser) {
+        // Simulate sending password reset email
+        alert(`Password reset link has been sent to ${email}. Please check your inbox.`);
+        setShowResetPasswordModal(false);
+        return;
+      }
+    }
+    
+    alert('No account found with that email address.');
+  };
+
   const handleCreateListing = async (e) => {
     e.preventDefault();
+    
     const newListing = {
       id: Date.now().toString(),
       ...listingForm,
@@ -163,15 +240,25 @@ export default function LinkXApp() {
       createdAt: new Date().toISOString()
     };
 
-    const updated = [...listings, newListing];
-    storage.set('listings', JSON.stringify(updated));
-    setListings(updated);
+    const updatedListings = [...listings, newListing];
+    await window.storage.set('listings', JSON.stringify(updatedListings));
+    setListings(updatedListings);
+    
     setShowListingModal(false);
-    setListingForm({ type: 'hunting', title: '', provider: '', location: '', price: '', duration: '', description: '' });
+    setListingForm({
+      type: 'hunting',
+      title: '',
+      provider: '',
+      location: '',
+      price: '',
+      duration: '',
+      description: ''
+    });
   };
 
   const handleCreateSwap = async (e) => {
     e.preventDefault();
+    
     const newSwap = {
       id: Date.now().toString(),
       ...swapForm,
@@ -180,15 +267,17 @@ export default function LinkXApp() {
       createdAt: new Date().toISOString()
     };
 
-    const updated = [...swaps, newSwap];
-    storage.set('swaps', JSON.stringify(updated));
-    setSwaps(updated);
+    const updatedSwaps = [...swaps, newSwap];
+    await window.storage.set('swaps', JSON.stringify(updatedSwaps));
+    setSwaps(updatedSwaps);
+    
     setShowSwapModal(false);
     setSwapForm({ offering: '', seeking: '' });
   };
 
   const handleCreateIso = async (e) => {
     e.preventDefault();
+    
     const newIso = {
       id: Date.now().toString(),
       ...isoForm,
@@ -198,15 +287,17 @@ export default function LinkXApp() {
       createdAt: new Date().toISOString()
     };
 
-    const updated = [...isoPosts, newIso];
-    storage.set('isoPosts', JSON.stringify(updated));
-    setIsoPosts(updated);
+    const updatedIsos = [...isoPosts, newIso];
+    await window.storage.set('isoPosts', JSON.stringify(updatedIsos));
+    setIsoPosts(updatedIsos);
+    
     setShowIsoModal(false);
     setIsoForm({ description: '' });
   };
 
   const handleCreateJob = async (e) => {
     e.preventDefault();
+    
     const newJob = {
       id: Date.now().toString(),
       ...jobForm,
@@ -215,35 +306,100 @@ export default function LinkXApp() {
       createdAt: new Date().toISOString()
     };
 
-    const updated = [...jobs, newJob];
-    storage.set('jobs', JSON.stringify(updated));
-    setJobs(updated);
+    const updatedJobs = [...jobs, newJob];
+    await window.storage.set('jobs', JSON.stringify(updatedJobs));
+    setJobs(updatedJobs);
+    
     setShowJobModal(false);
-    setJobForm({ title: '', company: '', location: '', type: 'full-time', description: '' });
+    setJobForm({
+      title: '',
+      company: '',
+      location: '',
+      type: 'full-time',
+      description: ''
+    });
   };
 
   const handleDeleteListing = async (id) => {
-    const updated = listings.filter(l => l.id !== id);
-    storage.set('listings', JSON.stringify(updated));
-    setListings(updated);
+    const updatedListings = listings.filter(l => l.id !== id);
+    await window.storage.set('listings', JSON.stringify(updatedListings));
+    setListings(updatedListings);
   };
 
   const handleDeleteSwap = async (id) => {
-    const updated = swaps.filter(s => s.id !== id);
-    storage.set('swaps', JSON.stringify(updated));
-    setSwaps(updated);
+    const updatedSwaps = swaps.filter(s => s.id !== id);
+    await window.storage.set('swaps', JSON.stringify(updatedSwaps));
+    setSwaps(updatedSwaps);
   };
 
   const handleDeleteIso = async (id) => {
-    const updated = isoPosts.filter(i => i.id !== id);
-    storage.set('isoPosts', JSON.stringify(updated));
-    setIsoPosts(updated);
+    const updatedIsos = isoPosts.filter(i => i.id !== id);
+    await window.storage.set('isoPosts', JSON.stringify(updatedIsos));
+    setIsoPosts(updatedIsos);
   };
 
   const handleDeleteJob = async (id) => {
-    const updated = jobs.filter(j => j.id !== id);
-    storage.set('jobs', JSON.stringify(updated));
-    setJobs(updated);
+    const updatedJobs = jobs.filter(j => j.id !== id);
+    await window.storage.set('jobs', JSON.stringify(updatedJobs));
+    setJobs(updatedJobs);
+  };
+
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    
+    const newEvent = {
+      id: Date.now().toString(),
+      ...eventForm,
+      userId: currentUser.id,
+      postedBy: currentUser.name,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedEvents = [...events, newEvent];
+    await window.storage.set('events', JSON.stringify(updatedEvents));
+    setEvents(updatedEvents);
+    
+    setShowEventModal(false);
+    setEventForm({
+      title: '',
+      date: '',
+      location: '',
+      description: ''
+    });
+  };
+
+  const handleDeleteEvent = async (id) => {
+    const updatedEvents = events.filter(e => e.id !== id);
+    await window.storage.set('events', JSON.stringify(updatedEvents));
+    setEvents(updatedEvents);
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    
+    const updatedUser = {
+      ...currentUser,
+      name: profileForm.name,
+      bio: profileForm.bio,
+      phone: profileForm.phone,
+      website: profileForm.website,
+      location: profileForm.location
+    };
+
+    // Save updated user
+    await window.storage.set(`user:${updatedUser.id}`, JSON.stringify(updatedUser));
+    
+    // Update users list
+    const updatedUsers = users.map(u => 
+      u.id === updatedUser.id 
+        ? { id: u.id, name: updatedUser.name, email: u.email }
+        : u
+    );
+    await window.storage.set('users', JSON.stringify(updatedUsers));
+    setUsers(updatedUsers);
+    
+    setCurrentUser(updatedUser);
+    setShowEditProfileModal(false);
   };
 
   const getTimeAgo = (dateString) => {
@@ -554,18 +710,51 @@ export default function LinkXApp() {
       {/* Events Page */}
       {currentPage === 'events' && (
         <div className="max-w-7xl mx-auto py-8 px-4">
-          <h1 className="text-3xl font-bold mb-8">News & Featured Events</h1>
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            <div className="bg-gradient-to-br from-green-600 to-blue-600 text-white rounded-lg shadow-lg p-8">
-              <div className="flex items-center space-x-2 mb-4">
-                <Calendar className="w-6 h-6" />
-                <span className="font-semibold">March 15-17, 2025</span>
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Rocky Mountain Hunting Expo</h3>
-              <p className="text-green-100 mb-4">Denver, CO</p>
-            </div>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">News & Featured Events</h1>
+            {isLoggedIn && (
+              <button onClick={() => setShowEventModal(true)} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2">
+                <Plus className="w-5 h-5" />
+                <span>Create Event</span>
+              </button>
+            )}
           </div>
-          <div>
+
+          {events.length === 0 ? (
+            <div className="text-center py-16">
+              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">No events yet. Be the first to create one!</p>
+              {isLoggedIn && (
+                <button onClick={() => setShowEventModal(true)} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                  Create First Event
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map(event => (
+                <div key={event.id} className="bg-gradient-to-br from-green-600 to-blue-600 text-white rounded-lg shadow-lg p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-5 h-5" />
+                      <span className="font-semibold">{event.date}</span>
+                    </div>
+                    {currentUser?.id === event.userId && (
+                      <button onClick={() => handleDeleteEvent(event.id)} className="text-white hover:text-red-200">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
+                  <p className="text-green-100 mb-4">{event.location}</p>
+                  {event.description && <p className="text-green-50 text-sm mb-4">{event.description}</p>}
+                  <div className="text-xs text-green-100">Posted by {event.postedBy}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Community Updates</h2>
             <div className="bg-white rounded-lg shadow-md p-6">
               <p className="text-sm text-gray-500 mb-2">Welcome to LinkX!</p>
@@ -647,7 +836,12 @@ export default function LinkXApp() {
                 Login
               </button>
             </form>
-            <p className="text-center mt-6 text-gray-600">
+            <div className="text-center mt-4">
+              <button onClick={() => setShowResetPasswordModal(true)} className="text-sm text-green-600 hover:underline">
+                Forgot your password?
+              </button>
+            </div>
+            <p className="text-center mt-4 text-gray-600">
               Don't have an account?{' '}
               <button onClick={() => setCurrentPage('signup')} className="text-green-600 font-semibold hover:underline">Sign up</button>
             </p>
@@ -708,11 +902,57 @@ export default function LinkXApp() {
                   <p className="text-sm text-gray-500">{currentUser?.email}</p>
                 </div>
               </div>
+              <button 
+                onClick={() => {
+                  setProfileForm({
+                    name: currentUser.name,
+                    bio: currentUser.bio || '',
+                    phone: currentUser.phone || '',
+                    website: currentUser.website || '',
+                    location: currentUser.location || ''
+                  });
+                  setShowEditProfileModal(true);
+                }} 
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center space-x-2"
+              >
+                <Edit2 className="w-4 h-4" />
+                <span>Edit Profile</span>
+              </button>
             </div>
             
             <div className="space-y-6">
+              {currentUser?.bio && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Bio</h3>
+                  <p className="text-gray-700">{currentUser.bio}</p>
+                </div>
+              )}
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {currentUser?.phone && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-600 mb-1">Phone</h3>
+                    <p className="text-gray-900">{currentUser.phone}</p>
+                  </div>
+                )}
+                {currentUser?.location && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-600 mb-1">Location</h3>
+                    <p className="text-gray-900">{currentUser.location}</p>
+                  </div>
+                )}
+                {currentUser?.website && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-600 mb-1">Website</h3>
+                    <a href={currentUser.website} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">
+                      {currentUser.website}
+                    </a>
+                  </div>
+                )}
+              </div>
+
               <div>
-                <h3 className="text-lg font-semibold mb-2">Your Activity</h3>
+                <h3 className="text-lg font-semibold mb-4">Your Activity</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-green-50 p-4 rounded-lg text-center">
                     <div className="text-2xl font-bold text-green-600">{listings.filter(l => l.userId === currentUser.id).length}</div>
@@ -982,6 +1222,178 @@ export default function LinkXApp() {
                   Post Job
                 </button>
                 <button type="button" onClick={() => setShowJobModal(false)} className="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event Modal */}
+      {showEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Create Event</h2>
+              <button onClick={() => setShowEventModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateEvent} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Event Title</label>
+                <input 
+                  type="text" 
+                  value={eventForm.title}
+                  onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Date</label>
+                <input 
+                  type="text" 
+                  value={eventForm.date}
+                  onChange={(e) => setEventForm({...eventForm, date: e.target.value})}
+                  placeholder="e.g., March 15-17, 2025"
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Location</label>
+                <input 
+                  type="text" 
+                  value={eventForm.location}
+                  onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Description (optional)</label>
+                <textarea 
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  rows="4"
+                />
+              </div>
+              <div className="flex space-x-4">
+                <button type="submit" className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                  Create Event
+                </button>
+                <button type="button" onClick={() => setShowEventModal(false)} className="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal */}
+      {showResetPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Reset Password</h2>
+              <button onClick={() => setShowResetPasswordModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">Enter your email address and we'll send you a link to reset your password.</p>
+            <form onSubmit={handlePasswordReset} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  name="email"
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  required 
+                />
+              </div>
+              <div className="flex space-x-4">
+                <button type="submit" className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                  Send Reset Link
+                </button>
+                <button type="button" onClick={() => setShowResetPasswordModal(false)} className="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Edit Profile</h2>
+              <button onClick={() => setShowEditProfileModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Full Name</label>
+                <input 
+                  type="text" 
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Bio</label>
+                <textarea 
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
+                  placeholder="Tell us about yourself..."
+                  className="w-full px-4 py-2 border rounded-lg" 
+                  rows="4"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Phone Number</label>
+                <input 
+                  type="tel" 
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                  placeholder="(555) 123-4567"
+                  className="w-full px-4 py-2 border rounded-lg" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Location</label>
+                <input 
+                  type="text" 
+                  value={profileForm.location}
+                  onChange={(e) => setProfileForm({...profileForm, location: e.target.value})}
+                  placeholder="City, State"
+                  className="w-full px-4 py-2 border rounded-lg" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Website</label>
+                <input 
+                  type="url" 
+                  value={profileForm.website}
+                  onChange={(e) => setProfileForm({...profileForm, website: e.target.value})}
+                  placeholder="https://yourwebsite.com"
+                  className="w-full px-4 py-2 border rounded-lg" 
+                />
+              </div>
+              <div className="flex space-x-4">
+                <button type="submit" className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                  Save Changes
+                </button>
+                <button type="button" onClick={() => setShowEditProfileModal(false)} className="px-6 py-3 border rounded-lg hover:bg-gray-50">
                   Cancel
                 </button>
               </div>
