@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar, Briefcase, Users, Mountain, Compass, Plus, Menu, X, User, LogOut, Settings, Edit2, Trash2 } from 'lucide-react';
 
-export default function LinkXApp() {
+export default function GuideXApp() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -130,42 +130,47 @@ export default function LinkXApp() {
   const sendWelcomeEmail = (userName, userEmail) => {
     // Simulate sending email by showing alert
     console.log(`Welcome email sent to ${userEmail}`);
-    alert(`Welcome to LinkX, ${userName}! A confirmation email has been sent to ${userEmail}.`);
+    alert(`Welcome to GuideX, ${userName}! A confirmation email has been sent to ${userEmail}.`);
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     
-    const newUser = {
-      id: Date.now().toString(),
-      name: formData.get('name'),
-      email: formData.get('email'),
-      password: formData.get('password'),
-      userType: formData.get('userType'),
-      bio: '',
-      phone: '',
-      website: '',
-      location: '',
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const newUser = {
+        id: Date.now().toString(),
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        userType: formData.get('userType'),
+        bio: '',
+        phone: '',
+        website: '',
+        location: '',
+        createdAt: new Date().toISOString()
+      };
 
-    // Save user
-    await window.storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
-    await window.storage.set('currentUserId', newUser.id);
-    
-    // Update users list
-    const newUsers = [...users, { id: newUser.id, name: newUser.name, email: newUser.email }];
-    await window.storage.set('users', JSON.stringify(newUsers));
-    setUsers(newUsers);
+      // Save user
+      await window.storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
+      await window.storage.set('currentUserId', newUser.id);
+      
+      // Update users list
+      const newUsers = [...users, { id: newUser.id, name: newUser.name, email: newUser.email }];
+      await window.storage.set('users', JSON.stringify(newUsers));
+      setUsers(newUsers);
 
-    setCurrentUser(newUser);
-    setIsLoggedIn(true);
-    
-    // Send welcome email
-    sendWelcomeEmail(newUser.name, newUser.email);
-    
-    setCurrentPage('home');
+      setCurrentUser(newUser);
+      setIsLoggedIn(true);
+      
+      // Send welcome email
+      sendWelcomeEmail(newUser.name, newUser.email);
+      
+      setCurrentPage('home');
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('An error occurred during signup. Please try again.');
+    }
   };
 
   const handleLogin = async (e) => {
@@ -174,28 +179,33 @@ export default function LinkXApp() {
     const email = formData.get('email');
     const password = formData.get('password');
 
-    // Find user by email
-    const usersList = await window.storage.get('users');
-    if (usersList) {
-      const usersArray = JSON.parse(usersList.value);
-      const foundUser = usersArray.find(u => u.email === email);
-      
-      if (foundUser) {
-        const userData = await window.storage.get(`user:${foundUser.id}`);
-        if (userData) {
-          const user = JSON.parse(userData.value);
-          if (user.password === password) {
-            setCurrentUser(user);
-            setIsLoggedIn(true);
-            await window.storage.set('currentUserId', user.id);
-            setCurrentPage('home');
-            return;
+    try {
+      // Find user by email
+      const usersList = await window.storage.get('users');
+      if (usersList) {
+        const usersArray = JSON.parse(usersList.value);
+        const foundUser = usersArray.find(u => u.email === email);
+        
+        if (foundUser) {
+          const userData = await window.storage.get(`user:${foundUser.id}`);
+          if (userData) {
+            const user = JSON.parse(userData.value);
+            if (user.password === password) {
+              setCurrentUser(user);
+              setIsLoggedIn(true);
+              await window.storage.set('currentUserId', user.id);
+              setCurrentPage('home');
+              return;
+            }
           }
         }
       }
+      
+      alert('Invalid email or password');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login. Please try again.');
     }
-    
-    alert('Invalid email or password');
   };
 
   const handleLogout = async () => {
@@ -210,21 +220,26 @@ export default function LinkXApp() {
     const formData = new FormData(e.target);
     const email = formData.get('email');
 
-    // Find user by email
-    const usersList = await window.storage.get('users');
-    if (usersList) {
-      const usersArray = JSON.parse(usersList.value);
-      const foundUser = usersArray.find(u => u.email === email);
-      
-      if (foundUser) {
-        // Simulate sending password reset email
-        alert(`Password reset link has been sent to ${email}. Please check your inbox.`);
-        setShowResetPasswordModal(false);
-        return;
+    try {
+      // Find user by email
+      const usersList = await window.storage.get('users');
+      if (usersList) {
+        const usersArray = JSON.parse(usersList.value);
+        const foundUser = usersArray.find(u => u.email === email);
+        
+        if (foundUser) {
+          // Simulate sending password reset email
+          alert(`Password reset link has been sent to ${email}. Please check your inbox.`);
+          setShowResetPasswordModal(false);
+          return;
+        }
       }
+      
+      alert('No account found with that email address.');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      alert('An error occurred. Please try again.');
     }
-    
-    alert('No account found with that email address.');
   };
 
   const handleCreateListing = async (e) => {
@@ -420,7 +435,7 @@ export default function LinkXApp() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Compass className="w-16 h-16 text-green-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading LinkX...</p>
+          <p className="text-gray-600">Loading GuideX...</p>
         </div>
       </div>
     );
@@ -434,7 +449,7 @@ export default function LinkXApp() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Compass className="w-8 h-8" />
-              <span className="text-2xl font-bold">LinkX</span>
+              <span className="text-2xl font-bold">GuideX</span>
             </div>
 
             <div className="hidden md:flex items-center space-x-6">
@@ -757,7 +772,7 @@ export default function LinkXApp() {
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Community Updates</h2>
             <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-sm text-gray-500 mb-2">Welcome to LinkX!</p>
+              <p className="text-sm text-gray-500 mb-2">Welcome to GuideX!</p>
               <h3 className="text-xl font-bold mb-2">Start Connecting with Outdoor Professionals</h3>
               <p className="text-gray-700">Create your profile and start posting listings, swaps, and opportunities.</p>
             </div>
@@ -853,7 +868,7 @@ export default function LinkXApp() {
       {currentPage === 'signup' && (
         <div className="max-w-md mx-auto py-16 px-4">
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-center mb-8">Join LinkX</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">Join GuideX</h2>
             <form onSubmit={handleSignup} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold mb-2">Full Name</label>
