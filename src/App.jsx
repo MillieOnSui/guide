@@ -75,6 +75,15 @@ export default function LinkXApp() {
 
   const loadAllData = async () => {
     setLoading(true);
+    
+    // Check if storage is available
+    if (!window.storage) {
+      console.error('Storage API not available!');
+      alert('Storage is not available. This app requires persistent storage to work. Please make sure you are viewing this as a Claude artifact.');
+      setLoading(false);
+      return;
+    }
+    
     try {
       // Load users
       const usersData = await window.storage.get('users');
@@ -141,6 +150,12 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     e.preventDefault();
     const formData = new FormData(e.target);
     
+    // Check if storage is available
+    if (!window.storage) {
+      alert('Storage is not available. This app requires persistent storage. Please view this as a Claude artifact.');
+      return;
+    }
+    
     try {
       const newUser = {
         id: Date.now().toString(),
@@ -186,6 +201,12 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     const formData = new FormData(e.target);
     const email = formData.get('email');
     const password = formData.get('password');
+
+    // Check if storage is available
+    if (!window.storage) {
+      alert('Storage is not available. This app requires persistent storage. Please view this as a Claude artifact.');
+      return;
+    }
 
     console.log('Login attempt for:', email);
 
@@ -242,6 +263,12 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     e.preventDefault();
     const formData = new FormData(e.target);
     const email = formData.get('email');
+
+    // Check if storage is available
+    if (!window.storage) {
+      alert('Storage is not available. This app requires persistent storage. Please view this as a Claude artifact.');
+      return;
+    }
 
     console.log('Password reset attempt for:', email);
 
