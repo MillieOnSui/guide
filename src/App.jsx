@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar, Briefcase, Users, Mountain, Compass, Plus, Menu, X, User, LogOut, Settings, Edit2, Trash2 } from 'lucide-react';
 
-export default function GuideXApp() {
+export default function LinkXApp() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -130,7 +130,11 @@ export default function GuideXApp() {
   const sendWelcomeEmail = (userName, userEmail) => {
     // Simulate sending email by showing alert
     console.log(`Welcome email sent to ${userEmail}`);
-    alert(`Welcome to GuideX, ${userName}! A confirmation email has been sent to ${userEmail}.`);
+    alert(`Welcome to LinkX, ${userName}! 
+
+In a production app, a confirmation email would be sent to ${userEmail}. 
+
+(This is a demo, so no actual email is sent)`);
   };
 
   const handleSignup = async (e) => {
@@ -151,6 +155,8 @@ export default function GuideXApp() {
         createdAt: new Date().toISOString()
       };
 
+      console.log('Creating new user:', { ...newUser, password: '***' });
+
       // Save user
       await window.storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
       await window.storage.set('currentUserId', newUser.id);
@@ -159,6 +165,8 @@ export default function GuideXApp() {
       const newUsers = [...users, { id: newUser.id, name: newUser.name, email: newUser.email }];
       await window.storage.set('users', JSON.stringify(newUsers));
       setUsers(newUsers);
+
+      console.log('User created successfully:', newUser.email);
 
       setCurrentUser(newUser);
       setIsLoggedIn(true);
@@ -169,7 +177,7 @@ export default function GuideXApp() {
       setCurrentPage('home');
     } catch (error) {
       console.error('Signup error:', error);
-      alert('An error occurred during signup. Please try again.');
+      alert(`Signup error: ${error.message}. Please check the console for details.`);
     }
   };
 
@@ -179,32 +187,47 @@ export default function GuideXApp() {
     const email = formData.get('email');
     const password = formData.get('password');
 
+    console.log('Login attempt for:', email);
+
     try {
       // Find user by email
       const usersList = await window.storage.get('users');
+      console.log('Users list:', usersList);
+      
       if (usersList) {
         const usersArray = JSON.parse(usersList.value);
+        console.log('Users array:', usersArray);
         const foundUser = usersArray.find(u => u.email === email);
+        console.log('Found user:', foundUser);
         
         if (foundUser) {
           const userData = await window.storage.get(`user:${foundUser.id}`);
+          console.log('User data:', userData);
+          
           if (userData) {
             const user = JSON.parse(userData.value);
+            console.log('Parsed user:', user);
+            console.log('Password match:', user.password === password);
+            
             if (user.password === password) {
               setCurrentUser(user);
               setIsLoggedIn(true);
               await window.storage.set('currentUserId', user.id);
               setCurrentPage('home');
+              alert('Login successful!');
+              return;
+            } else {
+              alert('Incorrect password. Please try again.');
               return;
             }
           }
         }
       }
       
-      alert('Invalid email or password');
+      alert('No account found with that email address. Please sign up first.');
     } catch (error) {
       console.error('Login error:', error);
-      alert('An error occurred during login. Please try again.');
+      alert(`Login error: ${error.message}. Please check the console for details.`);
     }
   };
 
@@ -220,25 +243,31 @@ export default function GuideXApp() {
     const formData = new FormData(e.target);
     const email = formData.get('email');
 
+    console.log('Password reset attempt for:', email);
+
     try {
       // Find user by email
       const usersList = await window.storage.get('users');
+      console.log('Users list:', usersList);
+      
       if (usersList) {
         const usersArray = JSON.parse(usersList.value);
+        console.log('Users array:', usersArray);
         const foundUser = usersArray.find(u => u.email === email);
+        console.log('Found user:', foundUser);
         
         if (foundUser) {
           // Simulate sending password reset email
-          alert(`Password reset link has been sent to ${email}. Please check your inbox.`);
+          alert(`Password reset link has been sent to ${email}. Please check your inbox (this is a simulated email for demo purposes).`);
           setShowResetPasswordModal(false);
           return;
         }
       }
       
-      alert('No account found with that email address.');
+      alert('No account found with that email address. Please check your email or sign up for a new account.');
     } catch (error) {
       console.error('Password reset error:', error);
-      alert('An error occurred. Please try again.');
+      alert(`Password reset error: ${error.message}. Please check the console for details.`);
     }
   };
 
