@@ -73,62 +73,53 @@ export default function LinkXApp() {
     loadAllData();
   }, []);
 
-  const loadAllData = async () => {
+  const loadAllData = () => {
     setLoading(true);
-    
-    // Check if storage is available
-    if (!window.storage) {
-      console.error('Storage API not available!');
-      alert('Storage is not available. This app requires persistent storage to work. Please make sure you are viewing this as a Claude artifact.');
-      setLoading(false);
-      return;
-    }
-    
     try {
       // Load users
-      const usersData = await window.storage.get('users');
+      const usersData = localStorage.getItem('linkx_users');
       if (usersData) {
-        setUsers(JSON.parse(usersData.value));
+        setUsers(JSON.parse(usersData));
       }
 
       // Load current user
-      const currentUserId = await window.storage.get('currentUserId');
+      const currentUserId = localStorage.getItem('linkx_currentUserId');
       if (currentUserId) {
-        const userData = await window.storage.get(`user:${currentUserId.value}`);
+        const userData = localStorage.getItem(`linkx_user_${currentUserId}`);
         if (userData) {
-          setCurrentUser(JSON.parse(userData.value));
+          setCurrentUser(JSON.parse(userData));
           setIsLoggedIn(true);
         }
       }
 
       // Load listings
-      const listingsData = await window.storage.get('listings');
+      const listingsData = localStorage.getItem('linkx_listings');
       if (listingsData) {
-        setListings(JSON.parse(listingsData.value));
+        setListings(JSON.parse(listingsData));
       }
 
       // Load swaps
-      const swapsData = await window.storage.get('swaps');
+      const swapsData = localStorage.getItem('linkx_swaps');
       if (swapsData) {
-        setSwaps(JSON.parse(swapsData.value));
+        setSwaps(JSON.parse(swapsData));
       }
 
       // Load ISO posts
-      const isoData = await window.storage.get('isoPosts');
+      const isoData = localStorage.getItem('linkx_isoPosts');
       if (isoData) {
-        setIsoPosts(JSON.parse(isoData.value));
+        setIsoPosts(JSON.parse(isoData));
       }
 
       // Load jobs
-      const jobsData = await window.storage.get('jobs');
+      const jobsData = localStorage.getItem('linkx_jobs');
       if (jobsData) {
-        setJobs(JSON.parse(jobsData.value));
+        setJobs(JSON.parse(jobsData));
       }
 
       // Load events
-      const eventsData = await window.storage.get('events');
+      const eventsData = localStorage.getItem('linkx_events');
       if (eventsData) {
-        setEvents(JSON.parse(eventsData.value));
+        setEvents(JSON.parse(eventsData));
       }
     } catch (error) {
       console.log('No existing data, starting fresh');
@@ -137,7 +128,6 @@ export default function LinkXApp() {
   };
 
   const sendWelcomeEmail = (userName, userEmail) => {
-    // Simulate sending email by showing alert
     console.log(`Welcome email sent to ${userEmail}`);
     alert(`Welcome to LinkX, ${userName}! 
 
@@ -146,16 +136,9 @@ In a production app, a confirmation email would be sent to ${userEmail}.
 (This is a demo, so no actual email is sent)`);
   };
 
-  const handleSignup = async (e) => {
-    console.log('=== SIGNUP BUTTON CLICKED ===');
+  const handleSignup = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    
-    // Check if storage is available
-    if (!window.storage) {
-      alert('Storage is not available. This app requires persistent storage. Please view this as a Claude artifact.');
-      return;
-    }
     
     try {
       const newUser = {
@@ -174,12 +157,12 @@ In a production app, a confirmation email would be sent to ${userEmail}.
       console.log('Creating new user:', { ...newUser, password: '***' });
 
       // Save user
-      await window.storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
-      await window.storage.set('currentUserId', newUser.id);
+      localStorage.setItem(`linkx_user_${newUser.id}`, JSON.stringify(newUser));
+      localStorage.setItem('linkx_currentUserId', newUser.id);
       
       // Update users list
       const newUsers = [...users, { id: newUser.id, name: newUser.name, email: newUser.email }];
-      await window.storage.set('users', JSON.stringify(newUsers));
+      localStorage.setItem('linkx_users', JSON.stringify(newUsers));
       setUsers(newUsers);
 
       console.log('User created successfully:', newUser.email);
@@ -193,51 +176,40 @@ In a production app, a confirmation email would be sent to ${userEmail}.
       setCurrentPage('home');
     } catch (error) {
       console.error('Signup error:', error);
-      alert(`Signup error: ${error.message}. Please check the console for details.`);
+      alert(`Signup error: ${error.message}. Please try again.`);
     }
   };
 
-  const handleLogin = async (e) => {
-    console.log('=== LOGIN BUTTON CLICKED ===');
+  const handleLogin = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const email = formData.get('email');
     const password = formData.get('password');
 
-    // Check if storage is available
-    if (!window.storage) {
-      alert('Storage is not available. This app requires persistent storage. Please view this as a Claude artifact.');
-      return;
-    }
-
     console.log('Login attempt for:', email);
 
     try {
       // Find user by email
-      const usersList = await window.storage.get('users');
-      console.log('Users list:', usersList);
+      const usersList = localStorage.getItem('linkx_users');
       
       if (usersList) {
-        const usersArray = JSON.parse(usersList.value);
+        const usersArray = JSON.parse(usersList);
         console.log('Users array:', usersArray);
         const foundUser = usersArray.find(u => u.email === email);
         console.log('Found user:', foundUser);
         
         if (foundUser) {
-          const userData = await window.storage.get(`user:${foundUser.id}`);
-          console.log('User data:', userData);
+          const userData = localStorage.getItem(`linkx_user_${foundUser.id}`);
           
           if (userData) {
-            const user = JSON.parse(userData.value);
+            const user = JSON.parse(userData);
             console.log('Parsed user:', user);
-            console.log('Password match:', user.password === password);
             
             if (user.password === password) {
               setCurrentUser(user);
               setIsLoggedIn(true);
-              await window.storage.set('currentUserId', user.id);
+              localStorage.setItem('linkx_currentUserId', user.id);
               setCurrentPage('home');
-              alert('Login successful!');
               return;
             } else {
               alert('Incorrect password. Please try again.');
@@ -250,58 +222,46 @@ In a production app, a confirmation email would be sent to ${userEmail}.
       alert('No account found with that email address. Please sign up first.');
     } catch (error) {
       console.error('Login error:', error);
-      alert(`Login error: ${error.message}. Please check the console for details.`);
+      alert(`Login error: ${error.message}. Please try again.`);
     }
   };
 
-  const handleLogout = async () => {
-    await window.storage.delete('currentUserId');
+  const handleLogout = () => {
+    localStorage.removeItem('linkx_currentUserId');
     setIsLoggedIn(false);
     setCurrentUser(null);
     setCurrentPage('home');
   };
 
-  const handlePasswordReset = async (e) => {
-    console.log('=== PASSWORD RESET BUTTON CLICKED ===');
+  const handlePasswordReset = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const email = formData.get('email');
 
-    // Check if storage is available
-    if (!window.storage) {
-      alert('Storage is not available. This app requires persistent storage. Please view this as a Claude artifact.');
-      return;
-    }
-
     console.log('Password reset attempt for:', email);
 
     try {
-      // Find user by email
-      const usersList = await window.storage.get('users');
-      console.log('Users list:', usersList);
+      const usersList = localStorage.getItem('linkx_users');
       
       if (usersList) {
-        const usersArray = JSON.parse(usersList.value);
-        console.log('Users array:', usersArray);
+        const usersArray = JSON.parse(usersList);
         const foundUser = usersArray.find(u => u.email === email);
-        console.log('Found user:', foundUser);
         
         if (foundUser) {
-          // Simulate sending password reset email
           alert(`Password reset link has been sent to ${email}. Please check your inbox (this is a simulated email for demo purposes).`);
           setShowResetPasswordModal(false);
           return;
         }
       }
       
-      alert('No account found with that email address. Please check your email or sign up for a new account.');
+      alert('No account found with that email address.');
     } catch (error) {
       console.error('Password reset error:', error);
-      alert(`Password reset error: ${error.message}. Please check the console for details.`);
+      alert(`Password reset error: ${error.message}. Please try again.`);
     }
   };
 
-  const handleCreateListing = async (e) => {
+  const handleCreateListing = (e) => {
     e.preventDefault();
     
     const newListing = {
@@ -315,7 +275,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     };
 
     const updatedListings = [...listings, newListing];
-    await window.storage.set('listings', JSON.stringify(updatedListings));
+    localStorage.setItem('linkx_listings', JSON.stringify(updatedListings));
     setListings(updatedListings);
     
     setShowListingModal(false);
@@ -330,7 +290,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     });
   };
 
-  const handleCreateSwap = async (e) => {
+  const handleCreateSwap = (e) => {
     e.preventDefault();
     
     const newSwap = {
@@ -342,14 +302,14 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     };
 
     const updatedSwaps = [...swaps, newSwap];
-    await window.storage.set('swaps', JSON.stringify(updatedSwaps));
+    localStorage.setItem('linkx_swaps', JSON.stringify(updatedSwaps));
     setSwaps(updatedSwaps);
     
     setShowSwapModal(false);
     setSwapForm({ offering: '', seeking: '' });
   };
 
-  const handleCreateIso = async (e) => {
+  const handleCreateIso = (e) => {
     e.preventDefault();
     
     const newIso = {
@@ -362,14 +322,14 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     };
 
     const updatedIsos = [...isoPosts, newIso];
-    await window.storage.set('isoPosts', JSON.stringify(updatedIsos));
+    localStorage.setItem('linkx_isoPosts', JSON.stringify(updatedIsos));
     setIsoPosts(updatedIsos);
     
     setShowIsoModal(false);
     setIsoForm({ description: '' });
   };
 
-  const handleCreateJob = async (e) => {
+  const handleCreateJob = (e) => {
     e.preventDefault();
     
     const newJob = {
@@ -381,7 +341,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     };
 
     const updatedJobs = [...jobs, newJob];
-    await window.storage.set('jobs', JSON.stringify(updatedJobs));
+    localStorage.setItem('linkx_jobs', JSON.stringify(updatedJobs));
     setJobs(updatedJobs);
     
     setShowJobModal(false);
@@ -394,31 +354,31 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     });
   };
 
-  const handleDeleteListing = async (id) => {
+  const handleDeleteListing = (id) => {
     const updatedListings = listings.filter(l => l.id !== id);
-    await window.storage.set('listings', JSON.stringify(updatedListings));
+    localStorage.setItem('linkx_listings', JSON.stringify(updatedListings));
     setListings(updatedListings);
   };
 
-  const handleDeleteSwap = async (id) => {
+  const handleDeleteSwap = (id) => {
     const updatedSwaps = swaps.filter(s => s.id !== id);
-    await window.storage.set('swaps', JSON.stringify(updatedSwaps));
+    localStorage.setItem('linkx_swaps', JSON.stringify(updatedSwaps));
     setSwaps(updatedSwaps);
   };
 
-  const handleDeleteIso = async (id) => {
+  const handleDeleteIso = (id) => {
     const updatedIsos = isoPosts.filter(i => i.id !== id);
-    await window.storage.set('isoPosts', JSON.stringify(updatedIsos));
+    localStorage.setItem('linkx_isoPosts', JSON.stringify(updatedIsos));
     setIsoPosts(updatedIsos);
   };
 
-  const handleDeleteJob = async (id) => {
+  const handleDeleteJob = (id) => {
     const updatedJobs = jobs.filter(j => j.id !== id);
-    await window.storage.set('jobs', JSON.stringify(updatedJobs));
+    localStorage.setItem('linkx_jobs', JSON.stringify(updatedJobs));
     setJobs(updatedJobs);
   };
 
-  const handleCreateEvent = async (e) => {
+  const handleCreateEvent = (e) => {
     e.preventDefault();
     
     const newEvent = {
@@ -430,7 +390,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     };
 
     const updatedEvents = [...events, newEvent];
-    await window.storage.set('events', JSON.stringify(updatedEvents));
+    localStorage.setItem('linkx_events', JSON.stringify(updatedEvents));
     setEvents(updatedEvents);
     
     setShowEventModal(false);
@@ -442,13 +402,13 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     });
   };
 
-  const handleDeleteEvent = async (id) => {
+  const handleDeleteEvent = (id) => {
     const updatedEvents = events.filter(e => e.id !== id);
-    await window.storage.set('events', JSON.stringify(updatedEvents));
+    localStorage.setItem('linkx_events', JSON.stringify(updatedEvents));
     setEvents(updatedEvents);
   };
 
-  const handleUpdateProfile = async (e) => {
+  const handleUpdateProfile = (e) => {
     e.preventDefault();
     
     const updatedUser = {
@@ -461,7 +421,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
     };
 
     // Save updated user
-    await window.storage.set(`user:${updatedUser.id}`, JSON.stringify(updatedUser));
+    localStorage.setItem(`linkx_user_${updatedUser.id}`, JSON.stringify(updatedUser));
     
     // Update users list
     const updatedUsers = users.map(u => 
@@ -469,7 +429,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
         ? { id: u.id, name: updatedUser.name, email: u.email }
         : u
     );
-    await window.storage.set('users', JSON.stringify(updatedUsers));
+    localStorage.setItem('linkx_users', JSON.stringify(updatedUsers));
     setUsers(updatedUsers);
     
     setCurrentUser(updatedUser);
