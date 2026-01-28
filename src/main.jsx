@@ -6,4 +6,5 @@ import './index.css'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LinkXApp />
-  </React.StrictMode>,
+  </React.StrictMode>
+)
