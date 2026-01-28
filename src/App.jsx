@@ -147,6 +147,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
   };
 
   const handleSignup = async (e) => {
+    console.log('=== SIGNUP BUTTON CLICKED ===');
     e.preventDefault();
     const formData = new FormData(e.target);
     
@@ -197,6 +198,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
   };
 
   const handleLogin = async (e) => {
+    console.log('=== LOGIN BUTTON CLICKED ===');
     e.preventDefault();
     const formData = new FormData(e.target);
     const email = formData.get('email');
@@ -260,6 +262,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
   };
 
   const handlePasswordReset = async (e) => {
+    console.log('=== PASSWORD RESET BUTTON CLICKED ===');
     e.preventDefault();
     const formData = new FormData(e.target);
     const email = formData.get('email');
@@ -491,7 +494,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Compass className="w-16 h-16 text-green-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading GuideX...</p>
+          <p className="text-gray-600">Loading LinkX...</p>
         </div>
       </div>
     );
@@ -505,7 +508,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Compass className="w-8 h-8" />
-              <span className="text-2xl font-bold">GuideX</span>
+              <span className="text-2xl font-bold">LinkX</span>
             </div>
 
             <div className="hidden md:flex items-center space-x-6">
@@ -828,7 +831,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Community Updates</h2>
             <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-sm text-gray-500 mb-2">Welcome to GuideX!</p>
+              <p className="text-sm text-gray-500 mb-2">Welcome to LinkX!</p>
               <h3 className="text-xl font-bold mb-2">Start Connecting with Outdoor Professionals</h3>
               <p className="text-gray-700">Create your profile and start posting listings, swaps, and opportunities.</p>
             </div>
@@ -924,7 +927,7 @@ In a production app, a confirmation email would be sent to ${userEmail}.
       {currentPage === 'signup' && (
         <div className="max-w-md mx-auto py-16 px-4">
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-center mb-8">Join GuideX</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">Join LinkX</h2>
             <form onSubmit={handleSignup} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold mb-2">Full Name</label>
